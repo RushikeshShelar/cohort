@@ -47,52 +47,57 @@ const app = express();
 
 app.use(bodyParser.json());
 
-let todos = [];
-
 app.get('/todos', (req, res) => {
-  return res.status(200).json(todos);
+  fs.readFile('./todos.json', 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('Internal Server Error');
+    } else {
+      res.status(200).send(JSON.parse(data));
+    }
+  })
 });
 
 app.get('/todos/:id', (req, res) => {
+  const todos = JSON.parse(fs.readFileSync('./todos.json', 'utf8'));
   const todo = todos.find(todo => todo.id === parseInt(req.params.id));
-  if (!todo) {
-    return res.status(404).send();
+  if (todo) {
+    res.status(200).send(todo);
   } else {
-    return res.status(200).json(todo);
+    res.status(404).send('Not Found');
   }
-})
+});
 
 app.post('/todos', (req, res) => {
-  const id = Math.floor(Math.random() * 10000000);
-  const newTodo = {
-    id,
-    title: req.body.title,
-    completed: req.body.completed,
-    description: req.body.description
-  }
+  const todos = JSON.parse(fs.readFileSync('./todos.json', 'utf8'));
+  const newTodo = req.body;
+  newTodo.id = Math.floor(Math.random() * 1000000);
   todos.push(newTodo);
-  return res.status(201).json(newTodo);
-})
+  fs.writeFileSync('./todos.json', JSON.stringify(todos));
+  res.status(201).send(newTodo);
+});
 
 app.put('/todos/:id', (req, res) => {
+  const todos = JSON.parse(fs.readFileSync('./todos.json', 'utf8'));
   const todo = todos.find(todo => todo.id === parseInt(req.params.id));
-  if (!todo) {
-    return res.status(404).send();
+  if (todo) {
+    todo.title = req.body.title;
+    todo.description = req.body.description;
+    fs.writeFileSync('./todos.json', JSON.stringify(todos));
+    res.status(200).send(todo);
+  } else {
+    res.status(404).send('Not Found');
   }
-  todo.title = req.body.title;
-  todo.completed = req.body.completed;
-  todo.description = req.body.description;
-  return res.status(200).json(todo);
-
 });
 
 app.delete('/todos/:id', (req, res) => {
+  const todos = JSON.parse(fs.readFileSync('./todos.json', 'utf8'));
   const todoIndex = todos.findIndex(todo => todo.id === parseInt(req.params.id));
-  if(todoIndex === -1) {
-    return res.status(404).send();
+  if (todoIndex !== -1) {
+    todos.splice(todoIndex, 1);
+    fs.writeFileSync('./todos.json', JSON.stringify(todos));
+    res.status(200).send();
+  } else {
+    res.status(404).send('Not Found');
   }
-  todos.splice(todoIndex, 1);
-  return res.status(200).send();
-})
-
+});
 module.exports = app;
