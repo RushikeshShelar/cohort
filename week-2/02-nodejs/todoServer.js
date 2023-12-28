@@ -100,4 +100,9 @@ app.delete('/todos/:id', (req, res) => {
     res.status(404).send('Not Found');
   }
 });
+
+app.all('*', (req, res) => {
+  res.status(404).send('Not Found');
+});
+
 module.exports = app;
