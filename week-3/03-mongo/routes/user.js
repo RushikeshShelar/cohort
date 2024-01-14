@@ -1,7 +1,8 @@
 const { Router } = require("express");
 const router = Router();
 const userMiddleware = require("../middleware/user");
-const { User } = require("../db");
+const { User, Course } = require("../db");
+const { url } = require("inspector");
 
 // User Routes
 router.post('/signup', (req, res) => {
@@ -12,30 +13,51 @@ router.post('/signup', (req, res) => {
         password
     })
     res.json({
-        message: 'User created successfully' 
+        message: 'User created successfully'
     })
 });
 
-router.get('/courses', (req, res) => {
+router.get('/courses', userMiddleware, async (req, res) => {
     // Implement listing all courses logic.
-    Course.find().then((courses) => res.json(courses))
+    await Course.find().then((course) => res.json(course))
 });
 
-router.post('/courses/:courseId', userMiddleware, (req, res) => {
+router.post('/courses/:courseId', userMiddleware, async(req, res) => {
     // Implement course purchase logic
-    const { courseId } = req.params;
-    const { userId } = req.headers.username;
-    User.findById(userId).then((user) => {
-        user.courses.push(courseId);
-        user.save();
-    })  
-});
+    const courseId = req.params.courseId;
+    const username = req.headers.username;
 
-router.get('/purchasedCourses', userMiddleware, (req, res) => {
-    // Implement fetching purchased courses logic
-    const { userId } = req.headers.username;
-    User.findById(userId).then((user) => {
-        const { courses } = user;
-        res.json(courses);
+    await User.updateOne({
+        username: username
+    }, {
+        "$push": {
+            purchasedCourses: courseId
+        }
+    })
+    res.json({
+        message: "Purchase complete!"
     })
 });
+
+router.get('/purchasedCourses', userMiddleware, async (req, res) => {
+    // Implement fetching purchased courses logic
+   const username =  req.headers.username
+
+    const user = await User.findOne({
+        username
+    });
+
+    console.log(user.purchasedCourses);
+
+    const courses = await Course.find({
+        _id:{
+            "$in": user.purchasedCourses
+        }
+    })
+
+    res.json({
+        purchasedCourses: courses
+    })
+});
+
+module.exports = router

@@ -1,3 +1,5 @@
+const { Admin } = require("../db");
+
 // Middleware for handling auth
 function adminMiddleware(req, res, next) {
     // Implement admin auth logic
@@ -5,13 +7,22 @@ function adminMiddleware(req, res, next) {
     const username = req.headers.username;
     const password = req.headers.password;
 
-    if(!username) return res.status(404).json('Not an Admin')
-
-    if(!password) return res.status(404).json('Not an Admin')
-
-    if(!(username == 'admin' && password == 'pass')) {
-        return res.status(403).json('Not an Admin')
+    if (!username || !password) {
+        return res.status(401).json('Unauthorized');
     }
+
+    Admin.findOne({
+        username,
+        password
+    })
+    .then((value) => {
+        if(!value) {
+            return res.status(401).json('Unauthorized');
+        } else{
+            next();
+        }
+    })
+
     next();
 }
 

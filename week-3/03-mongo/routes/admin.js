@@ -4,23 +4,24 @@ const router = Router();
 const { Admin, Course } = require('../db')
 
 // Admin Routes
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
     // Implement admin signup logic
     const { username, password } = req.body;
-    Admin.create({
+    const admin = await Admin.create({
         username,
         password
     });
+    await admin.save();
 
     res.json({
         message: 'Admin created successfully'
     })
 });
 
-router.post('/courses', adminMiddleware, (req, res) => {
+router.post('/courses', adminMiddleware, async (req, res) => {
     // Implement course creation logic
     const { title, description, price, imageLink } = req.body;
-    Course.create({
+    const course = await Course.create({
         title, 
         description, 
         price, 
@@ -29,13 +30,13 @@ router.post('/courses', adminMiddleware, (req, res) => {
 
     res.json({
         message: 'Course created successfully', 
-        courseId: "new course id",
+        courseId: course._id,
     })
 });
 
-router.get('/courses', adminMiddleware, (req, res) => {
+router.get('/courses', adminMiddleware, async (req, res) => {
     // Implement fetching all courses logic
-    Course.find().then((courses) => res.json(courses))
+    await Course.find().then((courses) => res.json(courses))
 });
 
 module.exports = router;
