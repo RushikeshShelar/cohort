@@ -5,13 +5,11 @@ enum Direction {
     Right
 }
 function doSomething(key: Direction) {
-	// do something.
-
+    // do something.
+    console.log(key);
 }
 
 doSomething(Direction.Up);
 doSomething(Direction.Down);
-console.log(Direction.Up); // 0
-console.log(Direction.Down);
 
 

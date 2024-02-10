@@ -1,1 +1,0 @@
-// Generics in Typescript
